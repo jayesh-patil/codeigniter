@@ -1,0 +1,37 @@
+<?php
+
+Class common extends CI_Model {
+
+    function __construct() {
+        parent::__construct();
+    }
+
+    function getdata($table) {
+        return $this->db->get($table)->result_array();
+    }
+
+    function get_data_where($table, $where) {
+        if (!empty($where)) {
+            foreach ($where as $key => $val) {
+                $this->db->where($key, $val);
+            }
+        }
+        return $this->db->get($table)->result_array();
+    }
+
+    function update_data($data, $where, $table) {
+        if (!empty($where)) {
+            foreach ($where as $key => $val) {
+                $this->db->where($key, $val);
+            }
+        }
+        return $this->db->update($table, $data);
+    }
+
+    function add_data($data, $table) {
+        return $this->db->insert($table, $data);
+    }
+
+}
+
+?>
