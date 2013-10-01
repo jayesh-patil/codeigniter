@@ -1,0 +1,72 @@
+<?php
+
+class analysis extends CI_Controller {
+
+    function __construct() {
+        parent::__construct();
+        $this->load->model('agent/analysis_mod');
+        $agent = $this->session->userdata('agent_logged_in');
+        if (empty($agent)) {
+            redirect('agent/login');
+        }
+    }
+
+    function index() {
+        $data = array();
+        $agent = $this->session->userdata('agent_logged_in');
+        $where = array('agent_name' => $agent['agent_name']);
+        $data['analysis'] = get_data_where('competitor_analysis', $where);
+        $this->load->view('agent/analysis_list', $data);
+    }
+
+    function add_analysis() {
+        $data = array();
+        if (!empty($_POST)) {
+
+            if (isset($_POST['competitor_analysis_id'])) {
+                $data['competitor_analysis_id'] = $_POST['competitor_analysis_id'];
+            }
+
+            $this->form_validation->set_rules('webpage_url', 'Web Page URL', 'trim|required|xss_clean');
+            $this->form_validation->set_rules('target_keywords', 'Target Keywords', 'trim|required|xss_clean');
+            $this->form_validation->set_rules('competitor_url', 'Competitor URL', 'trim|required');
+            $this->form_validation->set_rules('backline_url', 'backline URL', 'trim|required');
+            $this->form_validation->set_rules('status', 'Status', 'trim|required');
+            if ($this->form_validation->run() == FALSE) {
+                $this->load->view('agent/add_analysis', $data);
+            } else {
+                $agent = $this->session->userdata('agent_logged_in');
+                $insert_array = array('webpage_url', 'target_keywords', 'competitor_url', 'backline_url' , 'status');
+                foreach ($insert_array as $val) {
+                    $ins[$val] = $_POST[$val];
+                }
+                $ins['add_date'] = date('Y-m-d h:i:s');
+                $ins['agent_name'] = $agent['agent_name'];
+
+                if (isset($_POST['competitor_analysis_id'])) {
+                    $where = array('competitor_analysis_id' => $_POST['competitor_analysis_id']);
+                    update_data($ins, $where, 'competitor_analysis');
+                    $this->session->set_flashdata('msg', 'Data Update successfully');
+                } else {
+                    add_data($ins, 'competitor_analysis');
+                    $this->session->set_flashdata('msg', 'Data Added Succesfuly');
+                }
+                redirect('agent/analysis');
+            }
+        } else {
+            $this->load->view('agent/add_analysis', $data);
+        }
+    }
+
+    function edit_analysis() {
+        $id = substr(base64_decode($_GET['competitor_analysis_id']), 8);
+        $where = array('competitor_analysis_id' => $id);
+        $analysis = get_data_where('competitor_analysis', $where);
+        $data['analysis'] = $analysis[0];
+        $data['competitor_analysis_id'] = $analysis[0]['competitor_analysis_id'];
+        $this->load->view('agent/add_analysis', $data);
+    }
+
+}
+
+?>
